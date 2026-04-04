@@ -1,49 +1,112 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"os/signal"
 	"short-url-app/internal/endpoint"
-	"short-url-app/internal/pkg/middleware"
+	"short-url-app/internal/pkg/config"
 	"short-url-app/internal/service"
+	"short-url-app/internal/storage"
+	"syscall"
+	"time"
 
-	"github.com/labstack/echo/v5"
-	echomv "github.com/labstack/echo/v5/middleware"
+	"github.com/labstack/echo/v4"
+	echomv "github.com/labstack/echo/v4/middleware"
 )
 
 type App struct {
-	endpoint *endpoint.Endpoint
-	service  *service.Service
+	endpoint *endpoint.URLEndpoint
+	service  *service.URLService
+	storage  storage.Storage
 	echo     *echo.Echo
+	config   *config.Config
 }
 
-func New() (*App, error) {
-	app := &App{}
-
-	app.service = service.New()
-	app.endpoint = endpoint.New(app.service)
-	app.echo = echo.New()
-
-	// Middlewares
-	app.echo.Use(echomv.RequestLogger()) // use the RequestLogger mw with slog logger
-	app.echo.Use(echomv.Recover())       // recover panics as errors for proper error handling
-
-	// Custom middlewares
-	app.echo.Use(middleware.RoleCheck)
-
-	//Handlers
-	app.echo.POST("/shorten", app.endpoint.Shorten) // Генерация короткой ссылки
-
-	return app, nil
-}
-
-func (app *App) Run() error {
-	fmt.Printf("Server is running")
-
-	err := app.echo.Start(":8080")
+func New(cfg *config.Config) (*App, error) {
+	// Инициализация storage (снизу вверх)
+	store, err := storage.NewMemoryStorage(cfg.StorageFile)
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("failed to init storage: %w", err)
 	}
 
-	return nil
+	// Инициализация service
+	svc := service.New(store, cfg.BaseURL)
+
+	// Инициализация endpoint
+	ep := endpoint.New(svc)
+
+	// Инициализация HTTP сервера
+	server := echo.New()
+	server.Server.ReadTimeout = time.Duration(cfg.ReadTimeout) * time.Second
+	server.Server.WriteTimeout = time.Duration(cfg.WriteTimeout) * time.Second
+
+	// Middlewares
+	server.Use(echomv.RequestLogger())
+	server.Use(echomv.Recover())
+	server.Use(echomv.CORS())
+
+	// Роуты
+	server.POST("/shorten", ep.Shorten)
+	server.GET("/:code", ep.Redirect)
+	server.GET("/stats/:code", ep.GetStats)
+
+	// Health check
+	server.GET("/health", func(c echo.Context) error {
+		return c.JSON(200, map[string]string{"status": "ok"})
+	})
+
+	return &App{
+		endpoint: ep,
+		service:  svc,
+		storage:  store,
+		echo:     server,
+		config:   cfg,
+	}, nil
+}
+
+func (a *App) Run() error {
+	// Graceful shutdown
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	// Запуск сервера в горутине
+	errCh := make(chan error, 1)
+	go func() {
+		log.Printf("Server is running on %s", a.config.Port)
+		if err := a.echo.Start(a.config.Port); err != nil {
+			errCh <- err
+		}
+	}()
+
+	// Ожидание сигнала или ошибки
+	select {
+	case <-ctx.Done():
+		// Получен сигнал завершения
+		log.Println("Shutting down gracefully...")
+
+		// Контекст с таймаутом для завершения
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		// Сохраняем данные
+		if err := a.storage.SaveToFile(); err != nil {
+			log.Printf("Failed to save storage: %v", err)
+		}
+
+		// Останавливаем сервер
+		if err := a.echo.Shutdown(shutdownCtx); err != nil {
+			log.Printf("Error during shutdown: %v", err)
+			return err
+		}
+
+		log.Println("Server stopped gracefully")
+		return nil
+
+	case err := <-errCh:
+		// Ошибка при запуске сервера
+		log.Printf("Failed to start server: %v", err)
+		return err
+	}
 }

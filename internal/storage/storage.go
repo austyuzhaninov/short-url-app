@@ -1,6 +1,8 @@
 package storage
 
-import "github.com/yourusername/url-shortener/internal/models"
+import (
+	"short-url-app/internal/models"
+)
 
 type Storage interface {
 	Save(url models.URL) error
