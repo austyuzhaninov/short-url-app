@@ -21,7 +21,7 @@ type App struct {
 	endpoint *endpoint.URLEndpoint
 	service  *service.URLService
 	storage  storage.Storage
-	echo     *echo.Echo
+	Echo     *echo.Echo
 	config   *config.Config
 }
 
@@ -65,7 +65,7 @@ func New(cfg *config.Config) (*App, error) {
 		endpoint: ep,
 		service:  svc,
 		storage:  store,
-		echo:     server,
+		Echo:     server,
 		config:   cfg,
 	}, nil
 }
@@ -79,7 +79,7 @@ func (a *App) Run() error {
 	errCh := make(chan error, 1)
 	go func() {
 		log.Printf("Server is running on %s", a.config.Port)
-		if err := a.echo.Start(a.config.Port); err != nil {
+		if err := a.Echo.Start(a.config.Port); err != nil {
 			errCh <- err
 		}
 	}()
@@ -100,7 +100,7 @@ func (a *App) Run() error {
 		}
 
 		// Останавливаем сервер
-		if err := a.echo.Shutdown(shutdownCtx); err != nil {
+		if err := a.Echo.Shutdown(shutdownCtx); err != nil {
 			log.Printf("Error during shutdown: %v", err)
 			return err
 		}
