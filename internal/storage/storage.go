@@ -1,14 +1,14 @@
 package storage
 
 import (
-	"short-url-app/internal/models"
+	"short-url-app/internal/models/entity"
 )
 
 type Storage interface {
-	Save(url models.URL) error
-	Get(shortCode string) (models.URL, bool)
+	Save(url entity.URL) error
+	Get(shortCode string) (entity.URL, bool)
 	IncrementClicks(shortCode string) error
 	Exists(shortCode string) bool
 	SaveToFile() error
-	GetAll() map[string]models.URL
+	GetAll() map[string]entity.URL
 }

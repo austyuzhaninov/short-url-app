@@ -2,7 +2,7 @@ package endpoint
 
 import (
 	"net/http"
-	"short-url-app/internal/models"
+	"short-url-app/internal/models/dto"
 	"short-url-app/internal/service"
 
 	"github.com/labstack/echo/v4"
@@ -19,7 +19,7 @@ func New(service *service.URLService) *URLEndpoint {
 }
 
 func (e *URLEndpoint) Shorten(c echo.Context) error {
-	var req models.ShortenRequest
+	var req dto.ShortenRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request body"})
 	}

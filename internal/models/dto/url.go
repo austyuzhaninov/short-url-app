@@ -1,25 +1,20 @@
-package models
+package dto
 
 import "time"
 
-type URL struct {
-	ShortCode   string    `json:"short_code"`
-	OriginalURL string    `json:"original_url"`
-	UserID      string    `json:"user_id"`
-	Clicks      int       `json:"clicks"`
-	CreatedAt   time.Time `json:"created_at"`
-}
-
+// ShortenRequest - запрос на создание короткой ссылки
 type ShortenRequest struct {
 	URL    string `json:"url"`
 	UserID string `json:"user_id"`
 }
 
+// ShortenResponse - ответ с короткой ссылкой
 type ShortenResponse struct {
 	ShortCode string `json:"short_code"`
 	ShortURL  string `json:"short_url"`
 }
 
+// StatsResponse - ответ со статистикой
 type StatsResponse struct {
 	OriginalURL string    `json:"original_url"`
 	Clicks      int       `json:"clicks"`

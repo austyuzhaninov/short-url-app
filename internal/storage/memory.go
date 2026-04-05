@@ -4,19 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"short-url-app/internal/models"
+	"short-url-app/internal/models/entity"
 	"sync"
 )
 
 type MemoryStorage struct {
 	mu       sync.RWMutex
-	urls     map[string]models.URL
+	urls     map[string]entity.URL
 	filePath string
 }
 
 func NewMemoryStorage(filePath string) (*MemoryStorage, error) {
 	storage := &MemoryStorage{
-		urls:     make(map[string]models.URL),
+		urls:     make(map[string]entity.URL),
 		filePath: filePath,
 	}
 
@@ -34,7 +34,7 @@ func NewMemoryStorage(filePath string) (*MemoryStorage, error) {
 	return storage, nil
 }
 
-func (s *MemoryStorage) Save(url models.URL) error {
+func (s *MemoryStorage) Save(url entity.URL) error {
 	s.mu.Lock()
 	s.urls[url.ShortCode] = url
 	s.mu.Unlock() // ← освобождаем ДО записи в файл
@@ -42,7 +42,7 @@ func (s *MemoryStorage) Save(url models.URL) error {
 	return s.SaveToFile() // ← RLock() сможет захватиться
 }
 
-func (s *MemoryStorage) Get(shortCode string) (models.URL, bool) {
+func (s *MemoryStorage) Get(shortCode string) (entity.URL, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -74,11 +74,11 @@ func (s *MemoryStorage) Exists(shortCode string) bool {
 	return exists
 }
 
-func (s *MemoryStorage) GetAll() map[string]models.URL {
+func (s *MemoryStorage) GetAll() map[string]entity.URL {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	result := make(map[string]models.URL, len(s.urls))
+	result := make(map[string]entity.URL, len(s.urls))
 	for k, v := range s.urls {
 		result[k] = v
 	}
@@ -107,7 +107,7 @@ func (s *MemoryStorage) loadFromFile() error {
 		return err
 	}
 
-	var urls map[string]models.URL
+	var urls map[string]entity.URL
 	if err := json.Unmarshal(data, &urls); err != nil {
 		return fmt.Errorf("failed to unmarshal storage: %w", err)
 	}
