@@ -10,10 +10,10 @@ import (
 )
 
 type URLEndpoint struct {
-	service *service.URLService
+	service service.URLServiceInterface
 }
 
-func New(service *service.URLService) *URLEndpoint {
+func New(service service.URLServiceInterface) *URLEndpoint {
 	return &URLEndpoint{
 		service: service,
 	}

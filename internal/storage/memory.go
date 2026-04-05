@@ -107,6 +107,12 @@ func (s *MemoryStorage) loadFromFile() error {
 		return err
 	}
 
+	// Если файл пустой — инициализируем пустую map
+	if len(data) == 0 {
+		s.urls = make(map[string]entity.URL)
+		return nil
+	}
+
 	var urls map[string]entity.URL
 	if err := json.Unmarshal(data, &urls); err != nil {
 		return fmt.Errorf("failed to unmarshal storage: %w", err)

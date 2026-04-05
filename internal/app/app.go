@@ -52,9 +52,9 @@ func New(cfg *config.Config) (*App, error) {
 	server.Use(echomv.CORS())
 
 	// Роуты
-	server.POST("/shorten", ep.Shorten)
-	server.GET("/:code", ep.Redirect)
 	server.GET("/stats/:code", ep.GetStats)
+	server.GET("/:code", ep.Redirect)
+	server.POST("/shorten", ep.Shorten)
 
 	// Health check
 	server.GET("/health", func(c echo.Context) error {

@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+type URLServiceInterface interface {
+	ShortenURL(originalURL, userID string) (string, string, error)
+	GetOriginalURL(shortCode string) (string, error)
+	GetStats(shortCode string) (originalURL string, clicks int, createdAt time.Time, err error)
+}
+
 type URLService struct {
 	storage storage.Storage
 	baseURL string
