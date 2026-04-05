@@ -80,12 +80,17 @@ url-shortener/
 ├── cmd/server/main.go # Точка входа
 ├── internal/
 │ ├── app/app.go # Сборка и запуск приложения
-│ ├── endpoint/url.go # HTTP handlers
-│ ├── service/url.go # Бизнес-логика
+│ ├── endpoint/
+│   ├── dto/
+│   │   └── url.go              # ShortenRequest, ShortenResponse, StatsResponse
+│   └── url.go                  # Handlers (использует dto)
+│ ├── service/service.go # Бизнес-логика
 │ ├── storage/
 │ │ ├── storage.go # Интерфейс Storage
 │ │ └── memory.go # In-memory реализация
-│ ├── models/url.go # Модели данных
+│ ├── models/
+│   └── entity/
+│       └── url.go              # URL (для storage)
 │ └── pkg/
 │ ├── config/config.go # Конфигурация
 │ ├── generator/code.go # Генерация коротких кодов

@@ -3,7 +3,6 @@ package service
 import (
 	"errors"
 	"fmt"
-	"short-url-app/internal/models/dto"
 	"short-url-app/internal/models/entity"
 	"short-url-app/internal/pkg/generator"
 	"short-url-app/internal/pkg/validator"
@@ -23,14 +22,12 @@ func New(storage storage.Storage, baseURL string) *URLService {
 	}
 }
 
-func (s *URLService) ShortenURL(originalURL, userID string) (*dto.ShortenResponse, error) {
-	// Валидация URL
+func (s *URLService) ShortenURL(originalURL, userID string) (shortCode string, shortURL string, err error) {
 	if !validator.IsValidURL(originalURL) {
-		return nil, errors.New("invalid URL: must be valid http:// or https:// URL")
+		return "", "", errors.New("invalid URL")
 	}
 
-	// Генерация уникального короткого кода
-	var shortCode string
+	// Генерация уникального кода
 	for {
 		shortCode = generator.GenerateShortCode()
 		if !s.storage.Exists(shortCode) {
@@ -38,7 +35,7 @@ func (s *URLService) ShortenURL(originalURL, userID string) (*dto.ShortenRespons
 		}
 	}
 
-	// Создание записи
+	// Создаём entity для хранения
 	url := entity.URL{
 		ShortCode:   shortCode,
 		OriginalURL: originalURL,
@@ -48,13 +45,10 @@ func (s *URLService) ShortenURL(originalURL, userID string) (*dto.ShortenRespons
 	}
 
 	if err := s.storage.Save(url); err != nil {
-		return nil, fmt.Errorf("failed to save URL: %w", err)
+		return "", "", err
 	}
 
-	return &dto.ShortenResponse{
-		ShortCode: shortCode,
-		ShortURL:  fmt.Sprintf("%s/%s", s.baseURL, shortCode),
-	}, nil
+	return shortCode, fmt.Sprintf("%s/%s", s.baseURL, shortCode), nil
 }
 
 func (s *URLService) GetOriginalURL(shortCode string) (string, error) {
@@ -63,25 +57,18 @@ func (s *URLService) GetOriginalURL(shortCode string) (string, error) {
 		return "", errors.New("short code not found")
 	}
 
-	// Инкрементируем счётчик переходов
 	if err := s.storage.IncrementClicks(shortCode); err != nil {
-		// Логируем ошибку, но не возвращаем, чтобы редирект всё равно работал
-		// В реальном проекте здесь должен быть логгер
-		fmt.Printf("failed to increment clicks: %v\n", err)
+		// логируем, но не возвращаем ошибку
 	}
 
 	return url.OriginalURL, nil
 }
 
-func (s *URLService) GetStats(shortCode string) (*dto.StatsResponse, error) {
+func (s *URLService) GetStats(shortCode string) (originalURL string, clicks int, createdAt time.Time, err error) {
 	url, exists := s.storage.Get(shortCode)
 	if !exists {
-		return nil, errors.New("short code not found")
+		return "", 0, time.Time{}, errors.New("short code not found")
 	}
 
-	return &dto.StatsResponse{
-		OriginalURL: url.OriginalURL,
-		Clicks:      url.Clicks,
-		CreatedAt:   url.CreatedAt,
-	}, nil
+	return url.OriginalURL, url.Clicks, url.CreatedAt, nil
 }
