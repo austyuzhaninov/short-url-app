@@ -1,0 +1,33 @@
+# Бинарники
+bin/
+*.exe
+
+# Зависимости
+vendor/
+
+# Файлы IDE
+.idea/
+.vscode/
+
+# Git
+.git/
+.gitignore
+
+# Документация
+README.md
+*.md
+
+# Файлы данных
+storage.json
+data/
+
+# Env файлы
+.env
+.env.local
+
+# Логи
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
