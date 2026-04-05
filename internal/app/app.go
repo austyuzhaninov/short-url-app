@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"short-url-app/internal/endpoint"
 	"short-url-app/internal/pkg/config"
+	"short-url-app/internal/pkg/validator"
 	"short-url-app/internal/service"
 	"short-url-app/internal/storage"
 	"syscall"
@@ -41,6 +42,9 @@ func New(cfg *config.Config) (*App, error) {
 	server := echo.New()
 	server.Server.ReadTimeout = time.Duration(cfg.ReadTimeout) * time.Second
 	server.Server.WriteTimeout = time.Duration(cfg.WriteTimeout) * time.Second
+
+	// Подключаем кастомный валидатор
+	server.Validator = validator.NewEchoValidator()
 
 	// Middlewares
 	server.Use(echomv.RequestLogger())

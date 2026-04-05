@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"short-url-app/internal/models/entity"
 	"short-url-app/internal/pkg/generator"
-	"short-url-app/internal/pkg/validator"
 	"short-url-app/internal/storage"
 	"time"
 )
@@ -23,10 +22,6 @@ func New(storage storage.Storage, baseURL string) *URLService {
 }
 
 func (s *URLService) ShortenURL(originalURL, userID string) (shortCode string, shortURL string, err error) {
-	if !validator.IsValidURL(originalURL) {
-		return "", "", errors.New("invalid URL")
-	}
-
 	// Генерация уникального кода
 	for {
 		shortCode = generator.GenerateShortCode()

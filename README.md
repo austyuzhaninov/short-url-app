@@ -94,7 +94,7 @@ url-shortener/
 │ └── pkg/
 │ ├── config/config.go          # Конфигурация
 │ ├── generator/code.go         # Генерация коротких кодов
-│ └── validator/url.go          # Валидация URL
+│ └── validator/validator.go    # Валидация URL
 ├── tests/                      # Тесты
 ├── go.mod
 ├── go.sum

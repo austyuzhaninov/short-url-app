@@ -20,12 +20,15 @@ func New(service *service.URLService) *URLEndpoint {
 
 func (e *URLEndpoint) Shorten(c echo.Context) error {
 	var req dto.ShortenRequest
+
+	// Bind + валидация в одной строке!
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request body"})
 	}
 
-	if req.URL == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "url is required"})
+	// Автоматическая валидация по тегам
+	if err := c.Validate(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	shortCode, shortURL, err := e.service.ShortenURL(req.URL, req.UserID)
@@ -33,12 +36,10 @@ func (e *URLEndpoint) Shorten(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	resp := dto.ShortenResponse{
+	return c.JSON(http.StatusCreated, dto.ShortenResponse{
 		ShortCode: shortCode,
 		ShortURL:  shortURL,
-	}
-
-	return c.JSON(http.StatusCreated, resp)
+	})
 }
 
 func (e *URLEndpoint) Redirect(c echo.Context) error {
@@ -66,11 +67,9 @@ func (e *URLEndpoint) GetStats(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 	}
 
-	resp := dto.StatsResponse{
+	return c.JSON(http.StatusOK, dto.StatsResponse{
 		OriginalURL: originalURL,
 		Clicks:      clicks,
 		CreatedAt:   createdAt,
-	}
-
-	return c.JSON(http.StatusOK, resp)
+	})
 }

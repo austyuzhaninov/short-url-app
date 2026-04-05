@@ -4,8 +4,8 @@ import "time"
 
 // ShortenRequest - запрос на создание короткой ссылки
 type ShortenRequest struct {
-	URL    string `json:"url"`
-	UserID string `json:"user_id"`
+	URL    string `json:"url" validate:"required,url"`
+	UserID string `json:"user_id" validate:"required"`
 }
 
 // ShortenResponse - ответ с короткой ссылкой
