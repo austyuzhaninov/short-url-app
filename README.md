@@ -77,28 +77,28 @@ curl http://localhost:8080/stats/aB3xY9
 ## Структура проекта
 ```text
 url-shortener/
-├── cmd/server/main.go # Точка входа
+├── cmd/server/main.go          # Точка входа
 ├── internal/
-│ ├── app/app.go # Сборка и запуск приложения
+│ ├── app/app.go                # Сборка и запуск приложения
 │ ├── endpoint/
 │   ├── dto/
 │   │   └── url.go              # ShortenRequest, ShortenResponse, StatsResponse
 │   └── url.go                  # Handlers (использует dto)
-│ ├── service/service.go # Бизнес-логика
+│ ├── service/service.go        # Бизнес-логика
 │ ├── storage/
-│ │ ├── storage.go # Интерфейс Storage
-│ │ └── memory.go # In-memory реализация
+│ │ ├── storage.go              # Интерфейс Storage
+│ │ └── memory.go               # In-memory реализация
 │ ├── models/
 │   └── entity/
 │       └── url.go              # URL (для storage)
 │ └── pkg/
-│ ├── config/config.go # Конфигурация
-│ ├── generator/code.go # Генерация коротких кодов
-│ └── validator/url.go # Валидация URL
-├── tests/ # Тесты
+│ ├── config/config.go          # Конфигурация
+│ ├── generator/code.go         # Генерация коротких кодов
+│ └── validator/url.go          # Валидация URL
+├── tests/                      # Тесты
 ├── go.mod
 ├── go.sum
-└── storage.json # Файл с данными
+└── storage.json                # Файл с данными
 ```
 ## API
 
